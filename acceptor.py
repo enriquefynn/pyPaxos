@@ -8,7 +8,7 @@ from entity import Entity
 
 class Proposer(Entity):
     def __init__(self, pid, config_path):
-        super(Proposer, self).__init__(pid, 'proposers', config_path)
+        super(Proposer, self).__init__(pid, 'acceptors', config_path)
         def reader_loop():
             while True:
                 msg = self.recv()
@@ -27,7 +27,7 @@ class Proposer(Entity):
                     message.id = self._id
                     message.msg = msg
                     message.type = message_pb2.Message.PHASE1A
-                    self.send(message.SerializeToString(), 'acceptors')
+                    self.send(message.SerializeToString(), 'proposers')
                 except EOFError, KeyboardInterrupt:
                     exit(0)
         gevent.joinall([

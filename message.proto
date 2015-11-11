@@ -1,0 +1,13 @@
+package pyPaxos;
+
+message Message {
+  enum MessageType {
+    PHASE1A = 0;
+    PHASE1B = 1;
+    PHASE2A = 2;
+  }
+  required string name = 1;
+  required int32 id = 2;
+  required string msg = 3;
+  required MessageType type = 4 [default = PHASE1A];
+}
