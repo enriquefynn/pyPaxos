@@ -9,6 +9,7 @@ from entity import Entity
 class Proposer(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'proposers', config_path)
+        self.leader = self._id
         def reader_loop():
             while True:
                 msg = self.recv()
@@ -16,23 +17,8 @@ class Proposer(Entity):
                 parsed_message.ParseFromString(msg[0])
                 print parsed_message
 
-        def read_input():
-            while True:
-                try:
-                    print 'Waiting for input'
-                    select.select([sys.stdin], [], [])
-                    msg = raw_input()
-                    message = message_pb2.Message()
-                    message.name = 'acceptors'
-                    message.id = self._id
-                    message.msg = msg
-                    message.type = message_pb2.Message.PHASE1A
-                    self.send(message.SerializeToString(), 'acceptors')
-                except EOFError, KeyboardInterrupt:
-                    exit(0)
         gevent.joinall([
             gevent.spawn(reader_loop),
-            gevent.spawn(read_input)
         ])
 
 if __name__ == '__main__':

@@ -8,14 +8,12 @@ from entity import Entity
 
 class Proposer(Entity):
     def __init__(self, pid, config_path):
-        super(Proposer, self).__init__(pid, 'acceptors', config_path)
+        super(Proposer, self).__init__(pid, 'clients', config_path)
         def reader_loop():
             while True:
                 msg = self.recv()
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
-                if parsed_message.type == message_pb2.Message.PHASE1A
-                print parsed_message
 
         def read_input():
             while True:
@@ -24,10 +22,10 @@ class Proposer(Entity):
                     select.select([sys.stdin], [], [])
                     msg = raw_input()
                     message = message_pb2.Message()
-                    message.name = 'acceptors'
+                    message.name = 'clients'
                     message.id = self._id
                     message.msg = msg
-                    message.type = message_pb2.Message.PHASE1A
+                    message.type = message_pb2.Message.PROPOSAL
                     self.send(message.SerializeToString(), 'proposers')
                 except EOFError, KeyboardInterrupt:
                     exit(0)
