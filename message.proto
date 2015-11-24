@@ -6,11 +6,14 @@ message Message {
     PHASE1A = 1;
     PHASE1B = 2;
     PHASE2A = 3;
+    PHASE2B = 4;
   }
-  required string name = 1;
+  optional int32 instance = 1;
   required int32 id = 2;
-  required string msg = 3;
-  optional int32 nonce = 4;
+  optional string msg = 3;
+  optional int32 ballot = 4;
+  optional int32 vballot = 5;
+  optional string vmsg = 6;
 
-  required MessageType type = 5 [default = PHASE1A];
+  required MessageType type = 7 [default = PROPOSAL];
 }

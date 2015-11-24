@@ -22,7 +22,6 @@ class Proposer(Entity):
                     select.select([sys.stdin], [], [])
                     msg = raw_input()
                     message = message_pb2.Message()
-                    message.name = 'clients'
                     message.id = self._id
                     message.msg = msg
                     message.type = message_pb2.Message.PROPOSAL

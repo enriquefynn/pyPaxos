@@ -17,7 +17,8 @@ class Entity(object):
     def __init__(self, pid, role, config_path):
         self.__config = utils.read_config(config_path)
         for r in self.__config:
-            self.__config[r][1] = int(self.__config[r][1])
+            if r in ('acceptors', 'proposers', 'clients', 'learners'):
+                self.__config[r][1] = int(self.__config[r][1])
         self.__role = role
         self.__multicast_group = tuple(self.__config[self.__role])
 
@@ -36,3 +37,7 @@ class Entity(object):
         print('Receiving...')
         msg, addr = self.__recv_socket.recvfrom(1024) #TODO: Adjust buffer size?!
         return (msg, addr)
+    
+    def get_number_of_acceptors(self):
+        return int(self.__config['number_acceptors'][0])
+

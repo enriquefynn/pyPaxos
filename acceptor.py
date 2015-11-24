@@ -6,34 +6,36 @@ import sys
 import message_pb2
 from entity import Entity
 
-class Proposer(Entity):
+class Acceptor(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'acceptors', config_path)
+        self.bigger_ballot = 0;
+        #maps Instance -> (v-ballot, v-value)
+        self.instance_accepted = {}
         def reader_loop():
             while True:
                 msg = self.recv()
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
-                if parsed_message.type == message_pb2.Message.PHASE1A
+                if parsed_message.type == message_pb2.Message.PHASE1A:
+                    if not parsed_message.instance in self.instance_accepted:
+                        #Init with null
+                        self.instance_accepted[parsed_message.instance] = (-1, None)
+                    if parsed_message.ballot > self.instance_accepted[parsed_message.instance][0]:
+                        self.ballot = parsed_message.ballot
+                        message = message_pb2.Message()
+                        message.type = message_pb2.Message.PHASE1B
+                        message.id = self._id
+                        message.instance = parsed_message.instance
+                        message.vballot = self.instance_accepted[parsed_message.instance][0];
+                        message.vmsg = self.instance_accepted[parsed_message.instance][1];
+                        self.send(message.SerializeToString(), 'proposers')
+                    
                 print parsed_message
 
-        def read_input():
-            while True:
-                try:
-                    print 'Waiting for input'
-                    select.select([sys.stdin], [], [])
-                    msg = raw_input()
-                    message = message_pb2.Message()
-                    message.name = 'acceptors'
-                    message.id = self._id
-                    message.msg = msg
-                    message.type = message_pb2.Message.PHASE1A
-                    self.send(message.SerializeToString(), 'proposers')
-                except EOFError, KeyboardInterrupt:
-                    exit(0)
+        
         gevent.joinall([
             gevent.spawn(reader_loop),
-            gevent.spawn(read_input)
         ])
 
 if __name__ == '__main__':
