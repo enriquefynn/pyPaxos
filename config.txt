@@ -3,3 +3,4 @@ proposers 239.0.0.1 6000
 acceptors 239.0.0.1 7000
 learners 239.0.0.1 8000
 number_acceptors 3
+timeout_msgs 1

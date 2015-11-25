@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-import gevent, socket, struct
+import gevent, socket, time
 from gevent import select
 import sys
 
@@ -9,50 +9,110 @@ from entity import Entity
 class Proposer(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'proposers', config_path)
-        self.instance = -1
+        self.instance = 0
         self.leader = 0
         self.incremental = self._id
         #State has:
-        #  [{ballot, acceptor_messages, phase}]
-        self.state = []
+        #  {instance: {ballot, acceptor_messages, phase, timestamp}}
+        self.state = {}
+        # {instance: [msgs]}
+        self.acceptor_messages = {}
         def reader_loop():
             while True:
                 msg = self.recv()
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
+                #Got a Proposal from client
                 if parsed_message.type == message_pb2.Message.PROPOSAL:
-                    self.state.append({'ballot': self._id, 
-                    'acceptor_messages': [], 
-                    'phase': message_pb2.Message.PHASE1A})
-                    self.instance+= 1
+                    self.state[self.instance] = {
+                    'ballot': self._id,
+                    'acceptor_messages': [],
+                    'timestamp': time.time(),
+                    'phase': message_pb2.Message.PHASE1A,
+                    'msg': parsed_message.msg
+                    }
                     #Build Phase1A
                     message = message_pb2.Message()
                     message.type = message_pb2.Message.PHASE1A
                     message.id = self._id
                     message.instance = self.instance
                     message.ballot = self.state[self.instance]['ballot']
+                    self.instance+= 1
                     self.send(message.SerializeToString(), 'acceptors')
                 
                 #Got a Phase 1B
                 elif (parsed_message.type == message_pb2.Message.PHASE1B and
-                parsed_message.ballot == self.incremental):
+                parsed_message.instance in self.state):
                     if not parsed_message.instance in self.acceptor_messages:
                         self.acceptor_messages[parsed_message.instance] = [parsed_message]
                     else:
                         self.acceptor_messages.append(parsed_message)
                     #See if quorum is reached
-                    if (len(self.acceptor_messages[parsed_message.instance]) >= 
-                        (self.get_number_of_acceptors()+1)/2):
-                        print('Quorum reached, initiating 2B')
+                    n_msgs = 0
+                    current_propose = (-1, self.state[parsed_message.instance].msg)
+                    for msg in self.acceptor_messages[parsed_message.instance]:
+                        if msg.ballot == self.state[parsed_message.instance]['ballot']:
+                            n_msgs+=1
+                            current_propose = max(current_propose, 
+                            (parsed_message.vballot, parsed_message.vmsg))
+
+                    if n_msgs >= (self.get_number_of_acceptors()+1)/2:
+                        print('Quorum reached, initiating 2A')
+                        self.state[parsed_message.instance]['phase'] = message_pb2.Message.PHASE2A
+                        self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()
-                        message.type = message_pb2.Message.PHASE1B
+                        message.type = message_pb2.Message.PHASE2A
+                        message.msg = current_propose[1]
                         message.instance = self.instance
-                        
+                        self.send(message.SerializeToString(), 'acceptors')
                      
+                #Acceptor told me to pick a higher ballot
+                elif parsed_message.type == message_pb2.Message.HIGHBAL:
+                    #I'm not in that instance yet
+                    if not parsed_message.instance in self.state:
+                        continue
+                    #Grow ballot by arbitrary number
+                    self.state[parsed_message.instance]['ballot'] += 100 
+                    self.state[parsed_message.instance]['timestamp'] = time.time()
+                    #Build Phase1A
+                    #TODO: don't replicate code
+                    message = message_pb2.Message()
+                    message.type = message_pb2.Message.PHASE1A
+                    message.id = self._id
+                    message.instance = parsed_message.instance
+                    message.ballot = self.state[parsed_message.instance]['ballot']
+                    self.send(message.SerializeToString(), 'acceptors')
+
                 print parsed_message
+        
+        def check_unresponsive_msgs():
+            while True:
+                for instance in self.state:
+                    if (self.state[instance]['phase'] != message_pb2.Message.FINISHED and
+                    time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
+                        print 'Checking for unresponsive messages'
+
+                        #Grow ballot by arbitrary number
+                        self.state[instance]['ballot'] +=100
+                        self.state[instance]['timestamp'] = time.time()
+                        self.state[instance]['phase'] = message_pb2.Message.PHASE1A
+
+                        #Build Phase1A
+                        #TODO: don't replicate code
+                        message = message_pb2.Message()
+                        message.type = message_pb2.Message.PHASE1A
+                        message.id = self._id
+                        message.instance = instance
+                        message.ballot = self.state[instance]['ballot']
+                        print 'msg:'
+                        print message
+                        self.send(message.SerializeToString(), 'acceptors')
+
+                gevent.sleep(self.get_timeout_msgs())
 
         gevent.joinall([
             gevent.spawn(reader_loop),
+            gevent.spawn(check_unresponsive_msgs),
         ])
 
 if __name__ == '__main__':

@@ -30,6 +30,15 @@ class Acceptor(Entity):
                         message.vballot = self.instance_accepted[parsed_message.instance][0];
                         message.vmsg = self.instance_accepted[parsed_message.instance][1];
                         self.send(message.SerializeToString(), 'proposers')
+                    else: #We require a higher ballot
+                        message = message_pb2.Message()
+                        message.instance = parsed_message.instance
+                        message.type = message_pb2.Message.HIGHBAL
+                        message.id = self._id
+                        self.send(message.SerializeToString(), 'proposers')
+                    
+                elif parsed_message.type == message_pb2.Message.PHASE2A:
+                    
                     
                 print parsed_message
 

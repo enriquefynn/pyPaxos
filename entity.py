@@ -30,7 +30,8 @@ class Entity(object):
         if dst_role == self.__role: 
             return self.__recv_socket.sendto(msg.encode(), self.__multicast_group)
         send_socket = self.__init_socket(self.__config[dst_role][0])
-        send_socket.sendto(msg.encode(), tuple(self.__config[dst_role]))
+        print msg
+        send_socket.sendto(msg, tuple(self.__config[dst_role]))
         send_socket.close()
 
     def recv(self):
@@ -40,4 +41,7 @@ class Entity(object):
     
     def get_number_of_acceptors(self):
         return int(self.__config['number_acceptors'][0])
+
+    def get_timeout_msgs(self):
+        return float(self.__config['timeout_msgs'][0])
 
