@@ -17,7 +17,7 @@ class Learner(Entity):
                 msg = self.recv()
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
-                if parsed_message.type == message_pb2.Message.PHASE1B:
+                if parsed_message.type == message_pb2.Message.PHASE2B:
                     print parsed_message
         
         gevent.joinall([
