@@ -30,7 +30,6 @@ class Entity(object):
         if dst_role == self.__role: 
             return self.__recv_socket.sendto(msg.encode(), self.__multicast_group)
         send_socket = self.__init_socket(self.__config[dst_role][0])
-        print msg
         send_socket.sendto(msg, tuple(self.__config[dst_role]))
         send_socket.close()
 

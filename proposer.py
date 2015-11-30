@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import gevent, socket, time
+from sets import Set
 from gevent import select
 import sys
 
@@ -46,24 +47,29 @@ class Proposer(Entity):
                     if not parsed_message.instance in self.acceptor_messages:
                         self.acceptor_messages[parsed_message.instance] = [parsed_message]
                     else:
-                        self.acceptor_messages.append(parsed_message)
+                        self.acceptor_messages[parsed_message.instance].append(parsed_message)
                     #See if quorum is reached
-                    n_msgs = 0
-                    current_propose = (-1, self.state[parsed_message.instance].msg)
+                    n_msgs = Set([])
+                    current_propose = (-1, self.state[parsed_message.instance]['msg'])
+                    print self.acceptor_messages
                     for msg in self.acceptor_messages[parsed_message.instance]:
+                        print '-----00-----'
+                        print msg
                         if msg.ballot == self.state[parsed_message.instance]['ballot']:
-                            n_msgs+=1
+                            n_msgs.add(msg.id)
                             current_propose = max(current_propose, 
                             (parsed_message.vballot, parsed_message.vmsg))
+                        print n_msgs
 
-                    if n_msgs >= (self.get_number_of_acceptors()+1)/2:
+                    if len(n_msgs) >= (self.get_number_of_acceptors()+1)/2:
                         print('Quorum reached, initiating 2A')
                         self.state[parsed_message.instance]['phase'] = message_pb2.Message.PHASE2A
                         self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()
                         message.type = message_pb2.Message.PHASE2A
+                        message.ballot = self.state[parsed_message.instance]['ballot']
                         message.msg = current_propose[1]
-                        message.instance = self.instance
+                        message.instance = parsed_message.instance
                         self.send(message.SerializeToString(), 'acceptors')
                      
                 #Acceptor told me to pick a higher ballot
@@ -83,14 +89,15 @@ class Proposer(Entity):
                     message.ballot = self.state[parsed_message.instance]['ballot']
                     self.send(message.SerializeToString(), 'acceptors')
 
-                print parsed_message
         
         def check_unresponsive_msgs():
+            #FIXME: Do this later :-P
+            return
             while True:
                 for instance in self.state:
                     if (self.state[instance]['phase'] != message_pb2.Message.FINISHED and
                     time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
-                        print 'Checking for unresponsive messages'
+                        print 'Found unresponsive messages, will try again'
 
                         #Grow ballot by arbitrary number
                         self.state[instance]['ballot'] +=100

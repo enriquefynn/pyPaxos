@@ -8,27 +8,30 @@ from entity import Entity
 
 class Acceptor(Entity):
     def __init__(self, pid, config_path):
-        super(Proposer, self).__init__(pid, 'acceptors', config_path)
+        super(Acceptor, self).__init__(pid, 'acceptors', config_path)
         self.bigger_ballot = 0;
-        #maps Instance -> (v-ballot, v-value)
-        self.instance_accepted = {}
+        #maps Instance -> (rnd, v-ballot, v-value)
+        self.instance = {}
         def reader_loop():
             while True:
                 msg = self.recv()
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
                 if parsed_message.type == message_pb2.Message.PHASE1A:
-                    if not parsed_message.instance in self.instance_accepted:
+                    if not parsed_message.instance in self.instance:
                         #Init with null
-                        self.instance_accepted[parsed_message.instance] = (-1, None)
-                    if parsed_message.ballot > self.instance_accepted[parsed_message.instance][0]:
-                        self.ballot = parsed_message.ballot
+                        self.instance[parsed_message.instance] = (parsed_message.ballot, -1, '')
+                    if parsed_message.ballot >= self.instance[parsed_message.instance][0]:
+                        self.instance[parsed_message.instance] = (parsed_message.ballot,
+                        self.instance[parsed_message.instance][1],
+                        self.instance[parsed_message.instance][2])
                         message = message_pb2.Message()
                         message.type = message_pb2.Message.PHASE1B
                         message.id = self._id
                         message.instance = parsed_message.instance
-                        message.vballot = self.instance_accepted[parsed_message.instance][0];
-                        message.vmsg = self.instance_accepted[parsed_message.instance][1];
+                        message.ballot = self.instance[parsed_message.instance][0]
+                        message.vballot = self.instance[parsed_message.instance][1];
+                        message.vmsg = self.instance[parsed_message.instance][2];
                         self.send(message.SerializeToString(), 'proposers')
                     else: #We require a higher ballot
                         message = message_pb2.Message()
@@ -38,10 +41,20 @@ class Acceptor(Entity):
                         self.send(message.SerializeToString(), 'proposers')
                     
                 elif parsed_message.type == message_pb2.Message.PHASE2A:
-                    
-                    
-                print parsed_message
-
+                    print 'Received decide'
+                    print parsed_message
+                    print self.instance[parsed_message.instance]
+                    if (parsed_message.ballot >= self.instance[parsed_message.instance][0] and
+                        parsed_message.ballot != self.instance[parsed_message.instance][1]):
+                        self.instance[parsed_message.instance] = (parsed_message.ballot, 
+                        parsed_message.ballot,
+                        parsed_message.msg)
+                        message = message_pb2.Message()
+                        message.instance = parsed_message.instance
+                        message.ballot = parsed_message.ballot
+                        message.type = message_pb2.Message.PHASE2B
+                        message.id = self._id
+                        self.send(message.SerializeToString(), 'learners')
         
         gevent.joinall([
             gevent.spawn(reader_loop),
@@ -51,4 +64,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('./acceptor.py <id> <config>')
         sys.exit()
-    proposer = Proposer(int(sys.argv[1]), sys.argv[2])
+    acceptor = Acceptor(int(sys.argv[1]), sys.argv[2])
