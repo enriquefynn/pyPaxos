@@ -54,7 +54,8 @@ class Acceptor(Entity):
                         message.ballot = parsed_message.ballot
                         message.type = message_pb2.Message.PHASE2B
                         message.id = self._id
-                        self.send(message.SerializeToString(), 'learners')
+                        message.msg = parsed_message.msg
+                        self.send(message.SerializeToString(), 'proposers')
         
         gevent.joinall([
             gevent.spawn(reader_loop),

@@ -18,6 +18,8 @@ class Proposer(Entity):
         self.state = {}
         # {instance: [msgs]}
         self.acceptor_messages = {}
+        # {instance: [msgs]}
+        self.acceptor_decide = {}
         def reader_loop():
             while True:
                 msg = self.recv()
@@ -71,7 +73,29 @@ class Proposer(Entity):
                         message.msg = current_propose[1]
                         message.instance = parsed_message.instance
                         self.send(message.SerializeToString(), 'acceptors')
-                     
+
+                #Received phase 2B
+                elif (parsed_message.type == message_pb2.Message.PHASE2B and
+                parsed_message.instance in self.state):
+                    if not parsed_message.instance in self.acceptor_decide:
+                        self.acceptor_decide[parsed_message.instance] = [parsed_message]
+                    else:
+                        self.acceptor_decide[parsed_message.instance].append(parsed_message)
+                    n_msgs = Set([])
+                    for msg in self.acceptor_decide[parsed_message.instance]:
+                        n_msgs.add(msg.id)
+                    
+                    #Quorum reached, must inform learners
+                    if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
+                    self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
+                        print 'Informing decide to learners'
+                        self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
+                        self.state[parsed_message.instance]['timestamp'] = time.time()
+                        mesage = message_pb2.Message()
+                        message.type = message_pb2.Message.DECISION
+                        message.msg = parsed_message.msg
+                        self.send(message.SerializeToString(), 'learners')
+                
                 #Acceptor told me to pick a higher ballot
                 elif parsed_message.type == message_pb2.Message.HIGHBAL:
                     #I'm not in that instance yet
