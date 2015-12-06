@@ -3,6 +3,10 @@ from gevent import monkey
 import utils
 monkey.patch_socket()
 
+from logger import getLogger
+from sys import argv
+critical, info, debug = getLogger(__name__, argv)
+
 class Entity(object):
     def __init_socket(self, group):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,7 +38,7 @@ class Entity(object):
         send_socket.close()
 
     def recv(self):
-        print('Receiving...')
+        debug('Receiving...')
         msg, addr = self.__recv_socket.recvfrom(1024) #TODO: Adjust buffer size?!
         return (msg, addr)
     
