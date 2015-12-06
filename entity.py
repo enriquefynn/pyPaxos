@@ -3,9 +3,9 @@ from gevent import monkey
 import utils
 monkey.patch_socket()
 
-from logger import get_Logger
+from logger import get_logger
 from sys import argv
-critical, info, debug = get_Logger(__name__, argv)
+critical, info, debug = get_logger(__name__, argv)
 
 class Entity(object):
     def __init_socket(self, group):

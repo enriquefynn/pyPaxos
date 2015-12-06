@@ -6,9 +6,9 @@ import sys
 import message_pb2
 from entity import Entity
 
-from logger import get_Logger
+from logger import get_logger
 from sys import argv
-critical, info, debug = get_Logger(__name__, argv)
+critical, info, debug = get_logger(__name__, argv)
 
 
 class Learner(Entity):

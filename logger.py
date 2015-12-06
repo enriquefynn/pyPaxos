@@ -2,7 +2,7 @@ from logging import getLogger, basicConfig, CRITICAL, DEBUG, INFO
 
 verbosities = {'-v': CRITICAL, '-vv': INFO, '-vvv': DEBUG}
 
-def get_Logger(name, argv):
+def get_logger(name, argv):
 	logger = getLogger(name)
 
 	verbosity = min(verbosities.get(arg, CRITICAL+1) for arg in argv or [None])
