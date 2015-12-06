@@ -99,6 +99,7 @@ class Proposer(Entity):
                     mesage = message_pb2.Message()
                     message.type = message_pb2.Message.DECISION
                     message.msg = parsed_message.msg
+                    message.instance = parsed_message.instance
                     self.send(message.SerializeToString(), 'learners')
             
             #Acceptor told me to pick a higher ballot

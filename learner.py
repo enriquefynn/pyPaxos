@@ -29,6 +29,13 @@ class Learner(Entity):
                 info('Decided %s', parsed_message.msg)
                 self.decided[parsed_message.instance] = parsed_message.msg
 
+    def check_loop(self, values, callback):
+        while True:
+            if set(self.decided.values()) == set(values):
+                callback()
+            else:
+                debug('Missing {}'.format(set(values) - set(self.decided.values())))
+            gevent.sleep(1)
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
