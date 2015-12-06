@@ -6,6 +6,11 @@ import sys
 import message_pb2
 from entity import Entity
 
+from logger import get_Logger
+from sys import argv
+critical, info, debug = get_Logger(__name__, argv)
+
+
 class Acceptor(Entity):
     def __init__(self, pid, config_path):
         super(Acceptor, self).__init__(pid, 'acceptors', config_path)
@@ -41,9 +46,9 @@ class Acceptor(Entity):
                         self.send(message.SerializeToString(), 'proposers')
                     
                 elif parsed_message.type == message_pb2.Message.PHASE2A:
-                    print 'Received decide'
-                    print parsed_message
-                    print self.instance[parsed_message.instance]
+                    debug('Received decide')
+                    debug(parsed_message)
+                    debug(self.instance[parsed_message.instance])
                     if (parsed_message.ballot >= self.instance[parsed_message.instance][0] and
                         parsed_message.ballot != self.instance[parsed_message.instance][1]):
                         self.instance[parsed_message.instance] = (parsed_message.ballot, 
