@@ -10,9 +10,9 @@ from logger import get_Logger
 from sys import argv
 critical, info, debug = get_Logger(__name__, argv)
 
-class Proposer(Entity):
+class Client(Entity):
     def __init__(self, pid, config_path):
-        super(Proposer, self).__init__(pid, 'clients', config_path)
+        super(Client, self).__init__(pid, 'clients', config_path)
         def reader_loop():
             while True:
                 msg = self.recv()
@@ -41,4 +41,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('./acceptor.py <id> <config>')
         sys.exit()
-    proposer = Proposer(int(sys.argv[1]), sys.argv[2])
+    proposer = Client(int(sys.argv[1]), sys.argv[2])
