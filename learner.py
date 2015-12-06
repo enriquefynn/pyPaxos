@@ -23,7 +23,8 @@ class Learner(Entity):
                 parsed_message = message_pb2.Message()
                 parsed_message.ParseFromString(msg[0])
                 if parsed_message.type == message_pb2.Message.DECISION:
-                    print parsed_message
+                    debug(parsed_message)
+                    info('Decided %s', parsed_message.msg)
         
         gevent.joinall([
             gevent.spawn(reader_loop),
