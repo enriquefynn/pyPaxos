@@ -6,6 +6,10 @@ import sys
 import message_pb2
 from entity import Entity
 
+from logger import get_Logger
+from sys import argv
+critical, info, debug = get_Logger(__name__, argv)
+
 class Proposer(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'clients', config_path)
@@ -18,7 +22,7 @@ class Proposer(Entity):
         def read_input():
             while True:
                 try:
-                    print 'Waiting for input'
+                    debug('Waiting for input')
                     select.select([sys.stdin], [], [])
                     msg = raw_input()
                     message = message_pb2.Message()
