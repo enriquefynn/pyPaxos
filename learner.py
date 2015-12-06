@@ -17,21 +17,22 @@ class Learner(Entity):
         self.bigger_ballot = 0;
         #maps Instance -> (v-ballot, v-value)
         self.instance = {}
-        def reader_loop():
-            while True:
-                msg = self.recv()
-                parsed_message = message_pb2.Message()
-                parsed_message.ParseFromString(msg[0])
-                if parsed_message.type == message_pb2.Message.DECISION:
-                    debug(parsed_message)
-                    info('Decided %s', parsed_message.msg)
-        
-        gevent.joinall([
-            gevent.spawn(reader_loop),
-        ])
+    def reader_loop(self):
+        while True:
+            msg = self.recv()
+            parsed_message = message_pb2.Message()
+            parsed_message.ParseFromString(msg[0])
+            if parsed_message.type == message_pb2.Message.DECISION:
+                debug(parsed_message)
+                info('Decided %s', parsed_message.msg)
+    
+       
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         print('./acceptor.py <id> <config>')
         sys.exit()
     learner = Learner(int(sys.argv[1]), sys.argv[2])
+    gevent.joinall([
+        gevent.spawn(learner.reader_loop),
+        ])
