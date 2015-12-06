@@ -17,6 +17,8 @@ class Learner(Entity):
         self.bigger_ballot = 0;
         #maps Instance -> (v-ballot, v-value)
         self.instance = {}
+        self.decided  = {}
+
     def reader_loop(self):
         while True:
             msg = self.recv()
@@ -25,8 +27,8 @@ class Learner(Entity):
             if parsed_message.type == message_pb2.Message.DECISION:
                 debug(parsed_message)
                 info('Decided %s', parsed_message.msg)
-    
-       
+                self.decided[parsed_message.instance] = parsed_message.msg
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
