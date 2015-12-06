@@ -6,6 +6,11 @@ import sys
 import message_pb2
 from entity import Entity
 
+from logger import get_Logger
+from sys import argv
+critical, info, debug = get_Logger(__name__, argv)
+
+
 class Learner(Entity):
     def __init__(self, pid, config_path):
         super(Learner, self).__init__(pid, 'learners', config_path)
@@ -25,7 +30,7 @@ class Learner(Entity):
         ])
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         print('./acceptor.py <id> <config>')
         sys.exit()
     learner = Learner(int(sys.argv[1]), sys.argv[2])

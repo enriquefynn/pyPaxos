@@ -7,13 +7,18 @@ import sys
 import message_pb2
 from entity import Entity
 
+from logger import get_Logger
+from sys import argv
+critical, info, debug = get_Logger(__name__, argv)
+
+
 class Proposer(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'proposers', config_path)
         self.instance = 0
         self.leader = 0
         self.incremental = self._id
-        #State has:
+        # State has:
         #  {instance: {ballot, acceptor_messages, phase, timestamp}}
         self.state = {}
         # {instance: [msgs]}
@@ -53,18 +58,18 @@ class Proposer(Entity):
                     #See if quorum is reached
                     n_msgs = Set([])
                     current_propose = (-1, self.state[parsed_message.instance]['msg'])
-                    print self.acceptor_messages
+                    debug(self.acceptor_messages)
                     for msg in self.acceptor_messages[parsed_message.instance]:
-                        print '-----00-----'
-                        print msg
+                        debug('-----00-----')
+                        debug(msg)
                         if msg.ballot == self.state[parsed_message.instance]['ballot']:
                             n_msgs.add(msg.id)
                             current_propose = max(current_propose, 
                             (parsed_message.vballot, parsed_message.vmsg))
-                        print n_msgs
+                        debug(n_msgs)
 
                     if len(n_msgs) >= (self.get_number_of_acceptors()+1)/2:
-                        print('Quorum reached, initiating 2A')
+                        debug('Quorum reached, initiating 2A')
                         self.state[parsed_message.instance]['phase'] = message_pb2.Message.PHASE2A
                         self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()
@@ -88,7 +93,7 @@ class Proposer(Entity):
                     #Quorum reached, must inform learners
                     if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
                     self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
-                        print 'Informing decide to learners'
+                        debug('Informing decide to learners')
                         self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
                         self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()
@@ -121,7 +126,7 @@ class Proposer(Entity):
                 for instance in self.state:
                     if (self.state[instance]['phase'] != message_pb2.Message.FINISHED and
                     time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
-                        print 'Found unresponsive messages, will try again'
+                        debug('Found unresponsive messages, will try again')
 
                         #Grow ballot by arbitrary number
                         self.state[instance]['ballot'] +=100
@@ -135,8 +140,8 @@ class Proposer(Entity):
                         message.id = self._id
                         message.instance = instance
                         message.ballot = self.state[instance]['ballot']
-                        print 'msg:'
-                        print message
+                        debug('msg:')
+                        debug(message)
                         self.send(message.SerializeToString(), 'acceptors')
 
                 gevent.sleep(self.get_timeout_msgs())
