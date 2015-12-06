@@ -22,7 +22,9 @@ if __name__ == '__main__':
 				 Acceptor(3, config)]
 	proposers = [Proposer(1, config)]
 	learners  = [Learner(1, config)]
-	clients   = [Client(3, config)]
+
+	from sys import stdin
+	clients   = [Client(3, config, [line.strip() for line in stdin])]
 
 	# suppress logging
 	# for module in (x.__module__ for x in {Acceptor, Proposer, Client}):
@@ -30,5 +32,4 @@ if __name__ == '__main__':
 	# 	debug(module)
 	# getLogger(Learner.__module__).setLevel(level=DEBUG)
 	# debug(Learner.__module__)
-	joinall([spawn(x.reader_loop) for x in acceptors + proposers + learners + clients] +
-			[spawn(x.read_input)  for x in clients])
+	joinall([spawn(x.reader_loop) for x in acceptors + proposers + learners + clients])
