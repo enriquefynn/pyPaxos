@@ -27,6 +27,7 @@ class Proposer(Entity):
                 parsed_message.ParseFromString(msg[0])
                 #Got a Proposal from client
                 if parsed_message.type == message_pb2.Message.PROPOSAL:
+                    print parsed_message
                     self.state[self.instance] = {
                     'ballot': self._id,
                     'acceptor_messages': [],
@@ -38,9 +39,14 @@ class Proposer(Entity):
                     message = message_pb2.Message()
                     message.type = message_pb2.Message.PHASE1A
                     message.id = self._id
-                    message.instance = self.instance
-                    message.ballot = self.state[self.instance]['ballot']
-                    self.instance+= 1
+                    #learner catch up msg
+                    if parsed_message.instance != -1:
+                        message.instance = parsed_message.instance
+                    #client instance
+                    else:
+                        message.instance = self.instance
+                        message.ballot = self.state[self.instance]['ballot']
+                        self.instance+=1
                     self.send(message.SerializeToString(), 'acceptors')
                 
                 #Got a Phase 1B
@@ -50,6 +56,9 @@ class Proposer(Entity):
                         self.acceptor_messages[parsed_message.instance] = [parsed_message]
                     else:
                         self.acceptor_messages[parsed_message.instance].append(parsed_message)
+                    #Already sent 2A (had a quorum)
+                    if self.state[parsed_message.instance]['phase'] == message_pb2.Message.PHASE2A:
+                        continue
                     #See if quorum is reached
                     n_msgs = Set([])
                     current_propose = (-1, self.state[parsed_message.instance]['msg'])
@@ -89,6 +98,7 @@ class Proposer(Entity):
                     if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
                     self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
                         print 'Informing decide to learners'
+                        print parsed_message
                         self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
                         self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()

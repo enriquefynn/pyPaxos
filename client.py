@@ -24,6 +24,7 @@ class Proposer(Entity):
                     message = message_pb2.Message()
                     message.id = self._id
                     message.msg = msg
+                    message.instance = -1
                     message.type = message_pb2.Message.PROPOSAL
                     self.send(message.SerializeToString(), 'proposers')
                 except EOFError, KeyboardInterrupt:

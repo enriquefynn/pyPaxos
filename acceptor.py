@@ -44,6 +44,7 @@ class Acceptor(Entity):
                     print 'Received decide'
                     print parsed_message
                     print self.instance[parsed_message.instance]
+                    print 'EAAAA1', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1]
                     if (parsed_message.ballot >= self.instance[parsed_message.instance][0] and
                         parsed_message.ballot != self.instance[parsed_message.instance][1]):
                         self.instance[parsed_message.instance] = (parsed_message.ballot, 
@@ -56,6 +57,8 @@ class Acceptor(Entity):
                         message.id = self._id
                         message.msg = parsed_message.msg
                         self.send(message.SerializeToString(), 'proposers')
+                    
+                    print 'EAAAA2', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1]
         
         gevent.joinall([
             gevent.spawn(reader_loop),
