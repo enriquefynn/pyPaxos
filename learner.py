@@ -36,6 +36,8 @@ class Learner(Entity):
                     else:
                         if parsed_message.instance > self.maximum_instance:
                             self.maximum_instance = parsed_message.instance
+                        if parsed_message.instance < self.last_received_instance:
+                            continue
                         self.non_printed_instances[parsed_message.instance] = parsed_message.msg
                         print self.non_printed_instances
                         catch_up = parsed_message.instance - 1
