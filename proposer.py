@@ -56,6 +56,9 @@ class Proposer(Entity):
                         self.acceptor_messages[parsed_message.instance] = [parsed_message]
                     else:
                         self.acceptor_messages[parsed_message.instance].append(parsed_message)
+                    #Already sent 2A (had a quorum)
+                    if self.state[parsed_message.instance]['phase'] == message_pb2.Message.PHASE2A:
+                        continue
                     #See if quorum is reached
                     n_msgs = Set([])
                     current_propose = (-1, self.state[parsed_message.instance]['msg'])
@@ -95,6 +98,7 @@ class Proposer(Entity):
                     if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
                     self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
                         print 'Informing decide to learners'
+                        print parsed_message
                         self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
                         self.state[parsed_message.instance]['timestamp'] = time.time()
                         mesage = message_pb2.Message()

@@ -1,6 +1,6 @@
 # Returns a dictionary {name: [params]}
 def read_config(file_path):
-    config = {'number_acceptors': 3, 'timeout_msgs': 1}
+    config = {'number_acceptors': '3', 'timeout_msgs': '1'}
     with open(file_path) as f:
         for line in f:
             parsed_line = line.split()
