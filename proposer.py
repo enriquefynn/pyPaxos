@@ -42,7 +42,8 @@ class Proposer(Entity):
                     #learner catch up msg
                     if parsed_message.instance != -1:
                         message.instance = parsed_message.instance
-                        message.ballot = self._id
+                        self.state[parsed_message.instance]['ballot']+=100
+                        message.ballot = self.state[parsed_message.instance]['ballot']
                     #client instance
                     else:
                         message.ballot = self.state[self.instance]['ballot']
