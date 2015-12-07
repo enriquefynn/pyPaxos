@@ -41,13 +41,13 @@ class Learner(Entity):
                         catch_up = parsed_message.instance - 1
                         while catch_up in self.non_printed_instances:
                             catch_up-=1
-                        print 'Catching up with message {}'.format(catch_up)
                         message = message_pb2.Message()
                         message.instance = catch_up
                         message.id = self._id
                         message.msg = ''
                         message.type = message_pb2.Message.PROPOSAL
                         if catch_up != -1:
+                            print 'Catching up with message {}'.format(catch_up)
                             self.send(message.SerializeToString(), 'proposers')
                     
         gevent.joinall([

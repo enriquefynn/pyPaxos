@@ -42,10 +42,11 @@ class Proposer(Entity):
                     #learner catch up msg
                     if parsed_message.instance != -1:
                         message.instance = parsed_message.instance
+                        message.ballot = self._id
                     #client instance
                     else:
-                        message.instance = self.instance
                         message.ballot = self.state[self.instance]['ballot']
+                        message.instance = self.instance
                         self.instance+=1
                     self.send(message.SerializeToString(), 'acceptors')
                 
@@ -123,13 +124,12 @@ class Proposer(Entity):
                     message.ballot = self.state[parsed_message.instance]['ballot']
                     self.send(message.SerializeToString(), 'acceptors')
 
-        
         def check_unresponsive_msgs():
             #FIXME: Do this later :-P
-            return
+            return 0
             while True:
                 for instance in self.state:
-                    if (self.state[instance]['phase'] != message_pb2.Message.FINISHED and
+                    if (self.state[instance]['phase'] != message_pb2.Message.DECISION and
                     time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
                         print 'Found unresponsive messages, will try again'
 
