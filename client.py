@@ -3,7 +3,7 @@ import gevent, socket, struct
 from gevent import select
 import sys
 
-import message_pb2
+from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
@@ -14,16 +14,16 @@ class Client(Entity):
     def __init__(self, pid, config_path, values):
         super(Client, self).__init__(pid, 'clients', config_path)
         for value in values:
-            msg = message_pb2.Message(id = self._id,
+            msg = Message(id = self._id,
                                       instance = -1,
                                       msg = value,
-                                      type = message_pb2.Message.PROPOSAL)
+                                      type = Message.PROPOSAL)
             self.send(msg, 'proposers')
 
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message.FromString(msg[0])
+            parsed_message = Message.FromString(msg[0])
         
 if __name__ == '__main__':
     if len(sys.argv) != 3:

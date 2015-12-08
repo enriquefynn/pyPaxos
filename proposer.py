@@ -4,7 +4,7 @@ from sets import Set
 from gevent import select
 import sys
 
-import message_pb2
+from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
@@ -29,19 +29,19 @@ class Proposer(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message.FromString(msg[0])
+            parsed_message = Message.FromString(msg[0])
             #Got a Proposal from client
-            if parsed_message.type == message_pb2.Message.PROPOSAL:
+            if parsed_message.type == Message.PROPOSAL:
                 debug(parsed_message)
                 self.state[self.instance] = {
                 'ballot': self._id,
                 'acceptor_messages': [],
                 'timestamp': time.time(),
-                'phase': message_pb2.Message.PHASE1A,
+                'phase': Message.PHASE1A,
                 'msg': parsed_message.msg
                 }
                 #Build Phase1A
-                message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                message = Message(type = Message.PHASE1A,
                                               id = self._id)
                 #learner catch up msg
                 if parsed_message.instance != -1:
@@ -56,14 +56,14 @@ class Proposer(Entity):
                 self.send(message, 'acceptors')
             
             #Got a Phase 1B
-            elif (parsed_message.type == message_pb2.Message.PHASE1B and
+            elif (parsed_message.type == Message.PHASE1B and
             parsed_message.instance in self.state):
                 if not parsed_message.instance in self.acceptor_messages:
                     self.acceptor_messages[parsed_message.instance] = [parsed_message]
                 else:
                     self.acceptor_messages[parsed_message.instance].append(parsed_message)
                 #Already sent 2A (had a quorum)
-                if self.state[parsed_message.instance]['phase'] == message_pb2.Message.PHASE2A:
+                if self.state[parsed_message.instance]['phase'] == Message.PHASE2A:
                     continue
                 #See if quorum is reached
                 n_msgs = Set([])
@@ -80,9 +80,9 @@ class Proposer(Entity):
 
                 if len(n_msgs) >= (self.get_number_of_acceptors()+1)/2:
                     debug('Quorum reached, initiating 2A')
-                    self.state[parsed_message.instance]['phase'] = message_pb2.Message.PHASE2A
+                    self.state[parsed_message.instance]['phase'] = Message.PHASE2A
                     self.state[parsed_message.instance]['timestamp'] = time.time()
-                    message = message_pb2.Message(type = message_pb2.Message.PHASE2A,
+                    message = Message(type = Message.PHASE2A,
                                                   id = self._id,
                                                   ballot = self.state[parsed_message.instance]['ballot'],
                                                   msg = current_propose[1],
@@ -90,7 +90,7 @@ class Proposer(Entity):
                     self.send(message, 'acceptors')
 
             #Received phase 2B
-            elif (parsed_message.type == message_pb2.Message.PHASE2B and
+            elif (parsed_message.type == Message.PHASE2B and
             parsed_message.instance in self.state):
                 if not parsed_message.instance in self.acceptor_decide:
                     self.acceptor_decide[parsed_message.instance] = [parsed_message]
@@ -102,19 +102,19 @@ class Proposer(Entity):
                 
                 #Quorum reached, must inform learners
                 if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
-                self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
+                self.state[parsed_message.instance]['phase'] != Message.DECISION):
                     debug('Informing decide to learners')
                     debug(parsed_message)
-                    self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
+                    self.state[parsed_message.instance]['phase'] = Message.DECISION
                     self.state[parsed_message.instance]['timestamp'] = time.time()
-                    message = message_pb2.Message(type = message_pb2.Message.DECISION,
+                    message = Message(type = Message.DECISION,
                                                   id = self._id,
                                                   msg = parsed_message.msg,
                                                   instance = parsed_message.instance)
                     self.send(message, 'learners')
             
             #Acceptor told me to pick a higher ballot
-            elif parsed_message.type == message_pb2.Message.HIGHBAL:
+            elif parsed_message.type == Message.HIGHBAL:
                 #I'm not in that instance yet
                 if not parsed_message.instance in self.state:
                     continue
@@ -123,7 +123,7 @@ class Proposer(Entity):
                 self.state[parsed_message.instance]['timestamp'] = time.time()
                 #Build Phase1A
                 #TODO: don't replicate code
-                message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                message = Message(type = Message.PHASE1A,
                                               id = self._id,
                                               instance = parsed_message.instance,
                                               ballot = self.state[parsed_message.instance]['ballot'])
@@ -134,18 +134,18 @@ class Proposer(Entity):
         return 0
         while True:
             for instance in self.state:
-                if (self.state[instance]['phase'] != message_pb2.Message.DECISION and
+                if (self.state[instance]['phase'] != Message.DECISION and
                 time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
                     debug('Found unresponsive messages, will try again')
 
                     #Grow ballot by arbitrary number
                     self.state[instance]['ballot'] +=100
                     self.state[instance]['timestamp'] = time.time()
-                    self.state[instance]['phase'] = message_pb2.Message.PHASE1A
+                    self.state[instance]['phase'] = Message.PHASE1A
 
                     #Build Phase1A
                     #TODO: don't replicate code
-                    message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                    message = Message(type = Message.PHASE1A,
                                                   id = self._id,
                                                   instance = instance,
                                                   ballot = self.state[instance]['ballot'])

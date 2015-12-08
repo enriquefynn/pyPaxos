@@ -3,7 +3,7 @@ import gevent, socket, struct
 from gevent import select
 import sys
 
-import message_pb2
+from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
@@ -22,8 +22,8 @@ class Learner(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message.FromString(msg[0])
-            if parsed_message.type == message_pb2.Message.DECISION:
+            parsed_message = Message.FromString(msg[0])
+            if parsed_message.type == Message.DECISION:
                
                 if parsed_message.instance == self.last_received_instance + 1:
                     debug(parsed_message)
@@ -54,10 +54,10 @@ class Learner(Entity):
                     catch_up = parsed_message.instance - 1
                     while catch_up in self.non_printed_instances:
                         catch_up-=1
-                    message = message_pb2.Message(instance = catch_up,
+                    message = Message(instance = catch_up,
                                                   id = self._id,
                                                   msg = '',
-                                                  type = message_pb2.Message.PROPOSAL)
+                                                  type = Message.PROPOSAL)
                     if catch_up != -1:
                         debug('Catching up with message {}'.format(catch_up))
                         self.send(message, 'proposers')

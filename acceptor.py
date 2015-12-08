@@ -3,7 +3,7 @@ import gevent, socket, struct
 from gevent import select
 import sys
 
-import message_pb2
+from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
@@ -20,9 +20,9 @@ class Acceptor(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message()
+            parsed_message = Message()
             parsed_message.ParseFromString(msg[0])
-            if parsed_message.type == message_pb2.Message.PHASE1A:
+            if parsed_message.type == Message.PHASE1A:
                 if not parsed_message.instance in self.instance:
                     #Init with null
                     self.instance[parsed_message.instance] = (parsed_message.ballot, -1, '')
@@ -30,7 +30,7 @@ class Acceptor(Entity):
                     self.instance[parsed_message.instance] = (parsed_message.ballot,
                     self.instance[parsed_message.instance][1],
                     self.instance[parsed_message.instance][2])
-                    message = message_pb2.Message(type = message_pb2.Message.PHASE1B,
+                    message = Message(type = Message.PHASE1B,
                                                   id = self._id,
                                                   instance = parsed_message.instance,
                                                   ballot = self.instance[parsed_message.instance][0],
@@ -38,12 +38,12 @@ class Acceptor(Entity):
                                                   vmsg = self.instance[parsed_message.instance][2])
                     self.send(message, 'proposers')
                 else: #We require a higher ballot
-                    message = message_pb2.Message(instance = parsed_message.instance,
-                                                  type = message_pb2.Message.HIGHBAL,
+                    message = Message(instance = parsed_message.instance,
+                                                  type = Message.HIGHBAL,
                                                   id = self._id)
                     self.send(message, 'proposers')
                 
-            elif parsed_message.type == message_pb2.Message.PHASE2A:
+            elif parsed_message.type == Message.PHASE2A:
                 debug('Received decide')
                 debug(parsed_message)
                 debug(self.instance[parsed_message.instance])
@@ -53,9 +53,9 @@ class Acceptor(Entity):
                     self.instance[parsed_message.instance] = (parsed_message.ballot, 
                     parsed_message.ballot,
                     parsed_message.msg)
-                    message = message_pb2.Message(instance = parsed_message.instance,
+                    message = Message(instance = parsed_message.instance,
                                                   ballot = parsed_message.ballot,
-                                                  type = message_pb2.Message.PHASE2B,
+                                                  type = Message.PHASE2B,
                                                   id = self._id,
                                                   msg = parsed_message.msg)
                     self.send(message, 'proposers')
