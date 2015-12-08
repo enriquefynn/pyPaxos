@@ -25,6 +25,7 @@ class Proposer(Entity):
         self.acceptor_messages = {}
         # {instance: [msgs]}
         self.acceptor_decide = {}
+
     def reader_loop(self):
         while True:
             msg = self.recv()
@@ -32,6 +33,7 @@ class Proposer(Entity):
             parsed_message.ParseFromString(msg[0])
             #Got a Proposal from client
             if parsed_message.type == message_pb2.Message.PROPOSAL:
+                debug(parsed_message)
                 self.state[self.instance] = {
                 'ballot': self._id,
                 'acceptor_messages': [],
@@ -43,9 +45,16 @@ class Proposer(Entity):
                 message = message_pb2.Message()
                 message.type = message_pb2.Message.PHASE1A
                 message.id = self._id
-                message.instance = self.instance
-                message.ballot = self.state[self.instance]['ballot']
-                self.instance+= 1
+                #learner catch up msg
+                if parsed_message.instance != -1:
+                    message.instance = parsed_message.instance
+                    self.state[parsed_message.instance]['ballot']+=100
+                    message.ballot = self.state[parsed_message.instance]['ballot']
+                #client instance
+                else:
+                    message.ballot = self.state[self.instance]['ballot']
+                    message.instance = self.instance
+                    self.instance+=1
                 self.send(message.SerializeToString(), 'acceptors')
             
             #Got a Phase 1B
@@ -55,6 +64,9 @@ class Proposer(Entity):
                     self.acceptor_messages[parsed_message.instance] = [parsed_message]
                 else:
                     self.acceptor_messages[parsed_message.instance].append(parsed_message)
+                #Already sent 2A (had a quorum)
+                if self.state[parsed_message.instance]['phase'] == message_pb2.Message.PHASE2A:
+                    continue
                 #See if quorum is reached
                 n_msgs = Set([])
                 current_propose = (-1, self.state[parsed_message.instance]['msg'])
@@ -94,6 +106,7 @@ class Proposer(Entity):
                 if (len(n_msgs) >= (self.get_number_of_acceptors()+1)/2 and
                 self.state[parsed_message.instance]['phase'] != message_pb2.Message.DECISION):
                     debug('Informing decide to learners')
+                    debug(parsed_message)
                     self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
                     self.state[parsed_message.instance]['timestamp'] = time.time()
                     mesage = message_pb2.Message()
@@ -118,14 +131,13 @@ class Proposer(Entity):
                 message.instance = parsed_message.instance
                 message.ballot = self.state[parsed_message.instance]['ballot']
                 self.send(message.SerializeToString(), 'acceptors')
-
     
     def check_unresponsive_msgs(self):
         #FIXME: Do this later :-P
-        return
+        return 0
         while True:
             for instance in self.state:
-                if (self.state[instance]['phase'] != message_pb2.Message.FINISHED and
+                if (self.state[instance]['phase'] != message_pb2.Message.DECISION and
                 time.time() - self.state[instance]['timestamp'] > self.get_timeout_msgs()):
                     debug('Found unresponsive messages, will try again')
 
@@ -146,7 +158,6 @@ class Proposer(Entity):
                     self.send(message.SerializeToString(), 'acceptors')
 
             gevent.sleep(self.get_timeout_msgs())
-
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

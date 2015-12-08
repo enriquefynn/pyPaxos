@@ -15,6 +15,7 @@ class Client(Entity):
         super(Client, self).__init__(pid, 'clients', config_path)
         for value in values:
             msg = message_pb2.Message(id = self._id,
+                                      instance = -1,
                                       msg = value,
                                       type = message_pb2.Message.PROPOSAL)
             self.send(msg.SerializeToString(), 'proposers')

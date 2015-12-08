@@ -49,6 +49,7 @@ class Acceptor(Entity):
                 debug('Received decide')
                 debug(parsed_message)
                 debug(self.instance[parsed_message.instance])
+                debug('EAAAA1 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1])
                 if (parsed_message.ballot >= self.instance[parsed_message.instance][0] and
                     parsed_message.ballot != self.instance[parsed_message.instance][1]):
                     self.instance[parsed_message.instance] = (parsed_message.ballot, 
@@ -61,6 +62,8 @@ class Acceptor(Entity):
                     message.id = self._id
                     message.msg = parsed_message.msg
                     self.send(message.SerializeToString(), 'proposers')
+                debug('EAAAA2 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1])
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
