@@ -21,21 +21,21 @@ class Acceptor(Entity):
         super(Acceptor, self).__init__(pid, 'acceptors', config_path)
         self.bigger_ballot = 0;
         #maps Instance -> (rnd, v-ballot, v-value)
-        self.instance = {}
+        self.state = {}
     def reader_loop(self):
         while True:
             msg = self.recv()
             msg = Message.FromString(msg[0])
             if msg.type == Message.PHASE1A:
-                if not msg.instance in self.instance:
+                if not msg.instance in self.state:
                     #Init with null
-                    self.instance[msg.instance] = InstanceState(msg.ballot)
-                if msg.ballot >= self.instance[msg.instance].ballot:
-                    self.instance[msg.instance] = self.instance[msg.instance]._replace(ballot=msg.ballot)                   
+                    self.state[msg.instance] = InstanceState(msg.ballot)
+                if msg.ballot >= self.state[msg.instance].ballot:
+                    self.state[msg.instance] = self.state[msg.instance]._replace(ballot=msg.ballot)                   
                     message = Message(type = Message.PHASE1B,
                                       id = self._id,
                                       instance = msg.instance,
-                                      **self.instance[msg.instance]._asdict())
+                                      **self.state[msg.instance]._asdict())
                     self.send(message, 'proposers')
                 else: #We require a higher ballot
                     message = Message(instance = msg.instance,
@@ -46,11 +46,11 @@ class Acceptor(Entity):
             elif msg.type == Message.PHASE2A:
                 debug('Received decide')
                 debug(msg)
-                debug(self.instance[msg.instance])
-                debug('EAAAA1 %s %s %s', msg.ballot, self.instance[msg.instance])
-                if (msg.ballot >= self.instance[msg.instance].ballot and
-                    msg.ballot != self.instance[msg.instance].vballot):
-                    self.instance[msg.instance] = InstanceState(msg.ballot, 
+                debug(self.state[msg.instance])
+                debug('EAAAA1 %s %s %s', msg.ballot, self.state[msg.instance])
+                if (msg.ballot >= self.state[msg.instance].ballot and
+                    msg.ballot != self.state[msg.instance].vballot):
+                    self.state[msg.instance] = InstanceState(msg.ballot, 
                                                                            msg.ballot,
                                                                            msg.msg)
                     message = Message(instance = msg.instance,
@@ -59,7 +59,7 @@ class Acceptor(Entity):
                                       id = self._id,
                                       msg = msg.msg)
                     self.send(message, 'proposers')
-                debug('EAAAA2 %s %s %s', msg.ballot, self.instance[msg.instance])
+                debug('EAAAA2 %s %s %s', msg.ballot, self.state[msg.instance])
 
 
 if __name__ == '__main__':
