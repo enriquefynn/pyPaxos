@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 import gevent, socket, time
-from sets import Set
 from gevent import select
 import sys
 
@@ -68,7 +67,7 @@ class Proposer(Entity):
                 if self.state[parsed_message.instance].phase == Message.PHASE2A:
                     continue
                 #See if quorum is reached
-                n_msgs = Set([])
+                n_msgs = set([])
                 current_propose = (-1, self.state[parsed_message.instance].msg)
                 debug(self.acceptor_messages)
                 for msg in self.acceptor_messages[parsed_message.instance]:
@@ -96,7 +95,7 @@ class Proposer(Entity):
                     self.acceptor_decide[parsed_message.instance] = [parsed_message]
                 else:
                     self.acceptor_decide[parsed_message.instance].append(parsed_message)
-                n_msgs = Set([])
+                n_msgs = set([])
                 for msg in self.acceptor_decide[parsed_message.instance]:
                     n_msgs.add(msg.id)
                 
