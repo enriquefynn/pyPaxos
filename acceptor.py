@@ -36,12 +36,12 @@ class Acceptor(Entity):
                                                   ballot = self.instance[parsed_message.instance][0],
                                                   vballot = self.instance[parsed_message.instance][1],
                                                   vmsg = self.instance[parsed_message.instance][2])
-                    self.send(message.SerializeToString(), 'proposers')
+                    self.send(message, 'proposers')
                 else: #We require a higher ballot
                     message = message_pb2.Message(instance = parsed_message.instance,
                                                   type = message_pb2.Message.HIGHBAL,
                                                   id = self._id)
-                    self.send(message.SerializeToString(), 'proposers')
+                    self.send(message, 'proposers')
                 
             elif parsed_message.type == message_pb2.Message.PHASE2A:
                 debug('Received decide')
@@ -58,7 +58,7 @@ class Acceptor(Entity):
                                                   type = message_pb2.Message.PHASE2B,
                                                   id = self._id,
                                                   msg = parsed_message.msg)
-                    self.send(message.SerializeToString(), 'proposers')
+                    self.send(message, 'proposers')
                 debug('EAAAA2 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1])
 
 

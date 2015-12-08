@@ -53,7 +53,7 @@ class Proposer(Entity):
                     message.ballot = self.state[self.instance]['ballot']
                     message.instance = self.instance
                     self.instance+=1
-                self.send(message.SerializeToString(), 'acceptors')
+                self.send(message, 'acceptors')
             
             #Got a Phase 1B
             elif (parsed_message.type == message_pb2.Message.PHASE1B and
@@ -87,7 +87,7 @@ class Proposer(Entity):
                                                   ballot = self.state[parsed_message.instance]['ballot'],
                                                   msg = current_propose[1],
                                                   instance = parsed_message.instance)
-                    self.send(message.SerializeToString(), 'acceptors')
+                    self.send(message, 'acceptors')
 
             #Received phase 2B
             elif (parsed_message.type == message_pb2.Message.PHASE2B and
@@ -111,7 +111,7 @@ class Proposer(Entity):
                                                   id = self._id,
                                                   msg = parsed_message.msg,
                                                   instance = parsed_message.instance)
-                    self.send(message.SerializeToString(), 'learners')
+                    self.send(message, 'learners')
             
             #Acceptor told me to pick a higher ballot
             elif parsed_message.type == message_pb2.Message.HIGHBAL:
@@ -127,7 +127,7 @@ class Proposer(Entity):
                                               id = self._id,
                                               instance = parsed_message.instance,
                                               ballot = self.state[parsed_message.instance]['ballot'])
-                self.send(message.SerializeToString(), 'acceptors')
+                self.send(message, 'acceptors')
     
     def check_unresponsive_msgs(self):
         #FIXME: Do this later :-P
@@ -151,7 +151,7 @@ class Proposer(Entity):
                                                   ballot = self.state[instance]['ballot'])
                     debug('msg:')
                     debug(message)
-                    self.send(message.SerializeToString(), 'acceptors')
+                    self.send(message, 'acceptors')
 
             gevent.sleep(self.get_timeout_msgs())
 

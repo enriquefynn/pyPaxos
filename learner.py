@@ -60,7 +60,7 @@ class Learner(Entity):
                                                   type = message_pb2.Message.PROPOSAL)
                     if catch_up != -1:
                         debug('Catching up with message {}'.format(catch_up))
-                        self.send(message.SerializeToString(), 'proposers')
+                        self.send(message, 'proposers')
 
     def check_loop(self, values, callback):
         while True:

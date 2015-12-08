@@ -18,7 +18,7 @@ class Client(Entity):
                                       instance = -1,
                                       msg = value,
                                       type = message_pb2.Message.PROPOSAL)
-            self.send(msg.SerializeToString(), 'proposers')
+            self.send(msg, 'proposers')
 
     def reader_loop(self):
         while True:
