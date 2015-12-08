@@ -13,11 +13,11 @@ class Entity(object):
     def __init_socket(self, group):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 
-            struct.pack('b', 1)) #Only live in the LAN
+                        struct.pack('b', 1)) #Only live in the LAN
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-            struct.pack('4sL', socket.inet_aton(group),
-            socket.INADDR_ANY))
+                        struct.pack('4sL', socket.inet_aton(group),
+                        socket.INADDR_ANY))
         return sock
         
     def __init__(self, pid, role, config_path):
