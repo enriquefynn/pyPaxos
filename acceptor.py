@@ -25,42 +25,41 @@ class Acceptor(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = Message()
-            parsed_message.ParseFromString(msg[0])
-            if parsed_message.type == Message.PHASE1A:
-                if not parsed_message.instance in self.instance:
+            msg = Message.FromString(msg[0])
+            if msg.type == Message.PHASE1A:
+                if not msg.instance in self.instance:
                     #Init with null
-                    self.instance[parsed_message.instance] = InstanceState(parsed_message.ballot)
-                if parsed_message.ballot >= self.instance[parsed_message.instance].ballot:
-                    self.instance[parsed_message.instance] = self.instance[parsed_message.instance]._replace(ballot=parsed_message.ballot)                   
+                    self.instance[msg.instance] = InstanceState(msg.ballot)
+                if msg.ballot >= self.instance[msg.instance].ballot:
+                    self.instance[msg.instance] = self.instance[msg.instance]._replace(ballot=msg.ballot)                   
                     message = Message(type = Message.PHASE1B,
                                       id = self._id,
-                                      instance = parsed_message.instance,
-                                      **self.instance[parsed_message.instance]._asdict())
+                                      instance = msg.instance,
+                                      **self.instance[msg.instance]._asdict())
                     self.send(message, 'proposers')
                 else: #We require a higher ballot
-                    message = Message(instance = parsed_message.instance,
+                    message = Message(instance = msg.instance,
                                       type = Message.HIGHBAL,
                                       id = self._id)
                     self.send(message, 'proposers')
-                
-            elif parsed_message.type == Message.PHASE2A:
+
+            elif msg.type == Message.PHASE2A:
                 debug('Received decide')
-                debug(parsed_message)
-                debug(self.instance[parsed_message.instance])
-                debug('EAAAA1 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance])
-                if (parsed_message.ballot >= self.instance[parsed_message.instance].ballot and
-                    parsed_message.ballot != self.instance[parsed_message.instance].vballot):
-                    self.instance[parsed_message.instance] = InstanceState(parsed_message.ballot, 
-                                                                           parsed_message.ballot,
-                                                                           parsed_message.msg)
-                    message = Message(instance = parsed_message.instance,
-                                      ballot = parsed_message.ballot,
+                debug(msg)
+                debug(self.instance[msg.instance])
+                debug('EAAAA1 %s %s %s', msg.ballot, self.instance[msg.instance])
+                if (msg.ballot >= self.instance[msg.instance].ballot and
+                    msg.ballot != self.instance[msg.instance].vballot):
+                    self.instance[msg.instance] = InstanceState(msg.ballot, 
+                                                                           msg.ballot,
+                                                                           msg.msg)
+                    message = Message(instance = msg.instance,
+                                      ballot = msg.ballot,
                                       type = Message.PHASE2B,
                                       id = self._id,
-                                      msg = parsed_message.msg)
+                                      msg = msg.msg)
                     self.send(message, 'proposers')
-                debug('EAAAA2 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance])
+                debug('EAAAA2 %s %s %s', msg.ballot, self.instance[msg.instance])
 
 
 if __name__ == '__main__':
