@@ -30,19 +30,17 @@ class Acceptor(Entity):
                     self.instance[parsed_message.instance] = (parsed_message.ballot,
                     self.instance[parsed_message.instance][1],
                     self.instance[parsed_message.instance][2])
-                    message = message_pb2.Message()
-                    message.type = message_pb2.Message.PHASE1B
-                    message.id = self._id
-                    message.instance = parsed_message.instance
-                    message.ballot = self.instance[parsed_message.instance][0]
-                    message.vballot = self.instance[parsed_message.instance][1];
-                    message.vmsg = self.instance[parsed_message.instance][2];
+                    message = message_pb2.Message(type = message_pb2.Message.PHASE1B,
+                                                  id = self._id,
+                                                  instance = parsed_message.instance,
+                                                  ballot = self.instance[parsed_message.instance][0],
+                                                  vballot = self.instance[parsed_message.instance][1],
+                                                  vmsg = self.instance[parsed_message.instance][2])
                     self.send(message.SerializeToString(), 'proposers')
                 else: #We require a higher ballot
-                    message = message_pb2.Message()
-                    message.instance = parsed_message.instance
-                    message.type = message_pb2.Message.HIGHBAL
-                    message.id = self._id
+                    message = message_pb2.Message(instance = parsed_message.instance,
+                                                  type = message_pb2.Message.HIGHBAL,
+                                                  id = self._id)
                     self.send(message.SerializeToString(), 'proposers')
                 
             elif parsed_message.type == message_pb2.Message.PHASE2A:
@@ -55,12 +53,11 @@ class Acceptor(Entity):
                     self.instance[parsed_message.instance] = (parsed_message.ballot, 
                     parsed_message.ballot,
                     parsed_message.msg)
-                    message = message_pb2.Message()
-                    message.instance = parsed_message.instance
-                    message.ballot = parsed_message.ballot
-                    message.type = message_pb2.Message.PHASE2B
-                    message.id = self._id
-                    message.msg = parsed_message.msg
+                    message = message_pb2.Message(instance = parsed_message.instance,
+                                                  ballot = parsed_message.ballot,
+                                                  type = message_pb2.Message.PHASE2B,
+                                                  id = self._id,
+                                                  msg = parsed_message.msg)
                     self.send(message.SerializeToString(), 'proposers')
                 debug('EAAAA2 %s %s %s', parsed_message.ballot, self.instance[parsed_message.instance][0], self.instance[parsed_message.instance][1])
 

@@ -22,8 +22,7 @@ class Learner(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message()
-            parsed_message.ParseFromString(msg[0])
+            parsed_message = message_pb2.Message.FromString(msg[0])
             if parsed_message.type == message_pb2.Message.DECISION:
                
                 if parsed_message.instance == self.last_received_instance + 1:
@@ -55,11 +54,10 @@ class Learner(Entity):
                     catch_up = parsed_message.instance - 1
                     while catch_up in self.non_printed_instances:
                         catch_up-=1
-                    message = message_pb2.Message()
-                    message.instance = catch_up
-                    message.id = self._id
-                    message.msg = ''
-                    message.type = message_pb2.Message.PROPOSAL
+                    message = message_pb2.Message(instance = catch_up,
+                                                  id = self._id,
+                                                  msg = '',
+                                                  type = message_pb2.Message.PROPOSAL)
                     if catch_up != -1:
                         debug('Catching up with message {}'.format(catch_up))
                         self.send(message.SerializeToString(), 'proposers')

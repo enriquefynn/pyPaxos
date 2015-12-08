@@ -23,8 +23,7 @@ class Client(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message()
-            parsed_message.ParseFromString(msg[0])
+            parsed_message = message_pb2.Message.FromString(msg[0])
         
 if __name__ == '__main__':
     if len(sys.argv) != 3:

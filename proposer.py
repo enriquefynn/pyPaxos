@@ -29,8 +29,7 @@ class Proposer(Entity):
     def reader_loop(self):
         while True:
             msg = self.recv()
-            parsed_message = message_pb2.Message()
-            parsed_message.ParseFromString(msg[0])
+            parsed_message = message_pb2.Message.FromString(msg[0])
             #Got a Proposal from client
             if parsed_message.type == message_pb2.Message.PROPOSAL:
                 debug(parsed_message)
@@ -42,9 +41,8 @@ class Proposer(Entity):
                 'msg': parsed_message.msg
                 }
                 #Build Phase1A
-                message = message_pb2.Message()
-                message.type = message_pb2.Message.PHASE1A
-                message.id = self._id
+                message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                                              id = self._id)
                 #learner catch up msg
                 if parsed_message.instance != -1:
                     message.instance = parsed_message.instance
@@ -84,11 +82,11 @@ class Proposer(Entity):
                     debug('Quorum reached, initiating 2A')
                     self.state[parsed_message.instance]['phase'] = message_pb2.Message.PHASE2A
                     self.state[parsed_message.instance]['timestamp'] = time.time()
-                    mesage = message_pb2.Message()
-                    message.type = message_pb2.Message.PHASE2A
-                    message.ballot = self.state[parsed_message.instance]['ballot']
-                    message.msg = current_propose[1]
-                    message.instance = parsed_message.instance
+                    message = message_pb2.Message(type = message_pb2.Message.PHASE2A,
+                                                  id = self._id,
+                                                  ballot = self.state[parsed_message.instance]['ballot'],
+                                                  msg = current_propose[1],
+                                                  instance = parsed_message.instance)
                     self.send(message.SerializeToString(), 'acceptors')
 
             #Received phase 2B
@@ -109,10 +107,10 @@ class Proposer(Entity):
                     debug(parsed_message)
                     self.state[parsed_message.instance]['phase'] = message_pb2.Message.DECISION
                     self.state[parsed_message.instance]['timestamp'] = time.time()
-                    mesage = message_pb2.Message()
-                    message.type = message_pb2.Message.DECISION
-                    message.msg = parsed_message.msg
-                    message.instance = parsed_message.instance
+                    message = message_pb2.Message(type = message_pb2.Message.DECISION,
+                                                  id = self._id,
+                                                  msg = parsed_message.msg,
+                                                  instance = parsed_message.instance)
                     self.send(message.SerializeToString(), 'learners')
             
             #Acceptor told me to pick a higher ballot
@@ -125,11 +123,10 @@ class Proposer(Entity):
                 self.state[parsed_message.instance]['timestamp'] = time.time()
                 #Build Phase1A
                 #TODO: don't replicate code
-                message = message_pb2.Message()
-                message.type = message_pb2.Message.PHASE1A
-                message.id = self._id
-                message.instance = parsed_message.instance
-                message.ballot = self.state[parsed_message.instance]['ballot']
+                message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                                              id = self._id,
+                                              instance = parsed_message.instance,
+                                              ballot = self.state[parsed_message.instance]['ballot'])
                 self.send(message.SerializeToString(), 'acceptors')
     
     def check_unresponsive_msgs(self):
@@ -148,11 +145,10 @@ class Proposer(Entity):
 
                     #Build Phase1A
                     #TODO: don't replicate code
-                    message = message_pb2.Message()
-                    message.type = message_pb2.Message.PHASE1A
-                    message.id = self._id
-                    message.instance = instance
-                    message.ballot = self.state[instance]['ballot']
+                    message = message_pb2.Message(type = message_pb2.Message.PHASE1A,
+                                                  id = self._id,
+                                                  instance = instance,
+                                                  ballot = self.state[instance]['ballot'])
                     debug('msg:')
                     debug(message)
                     self.send(message.SerializeToString(), 'acceptors')
