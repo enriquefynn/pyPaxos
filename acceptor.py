@@ -36,11 +36,6 @@ class Acceptor(Entity):
                                       instance = msg.instance,
                                       **self.state[msg.instance]._asdict())
                     self.send(message, 'proposers')
-                else: #We require a higher ballot
-                    message = Message(instance = msg.instance,
-                                      type = Message.HIGHBAL,
-                                      id = self._id)
-                    self.send(message, 'proposers')
 
             elif msg.type == Message.PHASE2A:
                 debug('Received decide')

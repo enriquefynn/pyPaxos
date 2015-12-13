@@ -112,24 +112,7 @@ class Proposer(Entity):
                                                   instance = parsed_message.instance)
                     self.send(message, 'learners')
             
-            #Acceptor told me to pick a higher ballot
-            elif parsed_message.type == Message.HIGHBAL:
-                #I'm not in that instance yet
-                if not parsed_message.instance in self.state:
-                    continue
-                #Grow ballot by arbitrary number
-                self.state[parsed_message.instance] = self.state[parsed_message.instance]._replace(ballot = self.state[parsed_message.instance].ballot +100, timestamp = time.time())
-                #Build Phase1A
-                #TODO: don't replicate code
-                message = Message(type = Message.PHASE1A,
-                                              id = self._id,
-                                              instance = parsed_message.instance,
-                                              ballot = self.state[parsed_message.instance].ballot)
-                self.send(message, 'acceptors')
-    
     def check_unresponsive_msgs(self):
-        #FIXME: Do this later :-P
-        return 0
         while True:
             for instance in self.state:
                 if (self.state[instance].phase != Message.DECISION and
@@ -137,7 +120,8 @@ class Proposer(Entity):
                     debug('Found unresponsive messages, will try again')
 
                     #Grow ballot by arbitrary number
-                    self.state[instance] = self.state[instance]._replace(ballot = self.state[instance] + 100, timestamp = time.time(), phase = Message.PHASE1A)
+                    print self.state[instance]
+                    self.state[instance] = self.state[instance]._replace(ballot = self.state[instance].ballot + 100, timestamp = time.time(), phase = Message.PHASE1A)
 
                     #Build Phase1A
                     #TODO: don't replicate code
