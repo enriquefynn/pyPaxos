@@ -23,47 +23,20 @@ class Learner(Entity):
             msg = self.recv()
             parsed_message = Message.FromString(msg[0])
             if parsed_message.type == Message.DECISION:
-               
                 if parsed_message.instance == self.last_received_instance + 1:
-                    debug(parsed_message)
-                    #Print the past
-                    if (self.maximum_instance != self.last_received_instance and
-                    len(self.non_printed_instances) != 0):
-                        for instance in xrange(parsed_message.instance, self.maximum_instance+1):
-                            if (instance in self.non_printed_instances and 
-                            self.non_printed_instances[instance] != ""):
-                                info('Decided %s', parsed_message.msg)
-                                self.decided[parsed_message.instance] = parsed_message.msg
-                                sys.stdout.write("%s\n" % parsed_message.msg)
-                                sys.stdout.flush()
-                        self.non_printed_instances = {}
-                        self.last_received_instance = self.maximum_instance
-                    else:
-                        self.last_received_instance = parsed_message.instance
-                        self.maximum_instance = parsed_message.instance
-                        info('Decided %s', parsed_message.msg)
+                    self.last_received_instance+=1
+                    if parsed_message.msg != '':
                         sys.stdout.write("%s\n" % parsed_message.msg)
                         sys.stdout.flush()
-                        self.decided[parsed_message.instance] = parsed_message.msg
-
+                    self.decided[parsed_message.instance] = parsed_message.msg
                 #Catch up
                 else:
-                    if parsed_message.instance > self.maximum_instance:
-                        self.maximum_instance = parsed_message.instance
-                    if parsed_message.instance < self.last_received_instance:
-                        continue
-                    self.non_printed_instances[parsed_message.instance] = parsed_message.msg
-                    debug(self.non_printed_instances)
-                    catch_up = parsed_message.instance - 1
-                    while catch_up in self.non_printed_instances:
-                        catch_up-=1
-                    message = Message(instance = catch_up,
+                    message = Message(instance = self.last_received_instance+1,
                                                   id = self._id,
                                                   msg = '',
                                                   type = Message.PROPOSAL)
-                    if catch_up != -1:
-                        debug('Catching up with message {}'.format(catch_up))
-                        self.send(message, 'proposers')
+                    debug('Catching up with message {}'.format(self.last_received_instance+1))
+                    self.send(message, 'proposers')
 
     def check_loop(self, values, callback):
         while True:
