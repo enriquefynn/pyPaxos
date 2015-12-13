@@ -23,14 +23,21 @@ class Learner(Entity):
             msg = self.recv()
             parsed_message = Message.FromString(msg[0])
             if parsed_message.type == Message.DECISION:
-                if parsed_message.instance == self.last_received_instance + 1:
+                #Ignore the past
+                if parsed_message.instance <= self.last_received_instance:
+                    continue
+                self.maximum_instance = max(self.maximum_instance, parsed_message.instance)
+                debug('{} {}'.format(self.last_received_instance, self.maximum_instance))
+                debug(parsed_message)
+
+                self.non_printed_instances[parsed_message.instance] = parsed_message.msg
+                while (self.last_received_instance + 1) in self.non_printed_instances:
                     self.last_received_instance+=1
                     if parsed_message.msg != '':
-                        sys.stdout.write("%s\n" % parsed_message.msg)
+                        sys.stdout.write("%s\n" % self.non_printed_instances[self.last_received_instance])
                         sys.stdout.flush()
-                    self.decided[parsed_message.instance] = parsed_message.msg
-                #Catch up
-                else:
+                    self.decided[self.last_received_instance] = self.non_printed_instances[self.last_received_instance]
+                if self.last_received_instance < self.maximum_instance:
                     message = Message(instance = self.last_received_instance+1,
                                                   id = self._id,
                                                   msg = '',

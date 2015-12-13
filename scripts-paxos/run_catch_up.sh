@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 projdir="$1"
 conf=`pwd`/paxos.conf
 n="$2"
@@ -26,7 +27,7 @@ echo "starting acceptors..."
 sleep 1
 echo "starting learner 1..."
 
-./learner.sh 1 $conf > ../learn1 &
+./learner.sh -vvv 1 $conf > ../learn1 &
 
 sleep 1
 echo "starting proposers..."
@@ -35,14 +36,14 @@ echo "starting proposers..."
 ./proposer.sh 2 $conf &
 
 echo "waiting to start clients"
-sleep 10
+sleep 1
 echo "starting client 1..."
 
 ./client.sh 1 $conf < ../prop1 &
 
 sleep 1
 echo "starting learners 2..."
-./learner.sh 2 $conf > ../learn2 &
+./learner.sh -vvv 2 $conf > ../learn2 &
 
 sleep 1
 echo "starting client 2..."
