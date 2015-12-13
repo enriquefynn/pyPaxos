@@ -77,7 +77,7 @@ class Proposer(Entity):
                         (parsed_message.vballot, parsed_message.vmsg))
                     debug(n_msgs)
 
-                if len(n_msgs) >= (self.get_number_of_acceptors()+1)/2:
+                if len(n_msgs) >= self.get_number_of_acceptors()//2+1:
                     debug('Quorum reached, initiating 2A')
                     self.state[parsed_message.instance] = self.state[parsed_message.instance]._replace(phase = Message.PHASE2A, timestamp = time.time())
                     message = Message(type = Message.PHASE2A,
