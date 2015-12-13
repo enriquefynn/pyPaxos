@@ -34,12 +34,14 @@ class Learner(Entity):
                             self.non_printed_instances[instance] != ""):
                                 info('Decided %s', parsed_message.msg)
                                 self.decided[parsed_message.instance] = parsed_message.msg
+                                print(parsed_message.msg)
                         self.non_printed_instances = {}
                         self.last_received_instance = self.maximum_instance
                     else:
                         self.last_received_instance = parsed_message.instance
                         self.maximum_instance = parsed_message.instance
                         info('Decided %s', parsed_message.msg)
+                        print(parse_message.msg)
                         self.decided[parsed_message.instance] = parsed_message.msg
 
                 #Catch up
