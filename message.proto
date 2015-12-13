@@ -8,7 +8,7 @@ message Message {
     PHASE2A = 3;
     PHASE2B = 4;
     DECISION = 5;
-    HIGHBAL = 6;
+    LEADER = 6;
   }
   optional int32 instance = 1;
   required int32 id = 2;

@@ -19,7 +19,8 @@ class Proposer(Entity):
     def __init__(self, pid, config_path):
         super(Proposer, self).__init__(pid, 'proposers', config_path)
         self.instance = 0
-        self.leader = 0
+        self.leaders = {} #leader candidates
+        self.leader = self._id #start as the leader
         self.incremental = self._id
         # State has:
         #  {instance: {ballot, acceptor_messages, phase, timestamp}}
@@ -33,6 +34,24 @@ class Proposer(Entity):
         while True:
             msg = self.recv()
             parsed_message = Message.FromString(msg[0])
+            #See if it's time to change the leader
+            if parsed_message.type == Message.LEADER:
+                self.leaders[parsed_message.id] = time.time()
+                k = sorted(self.leaders.keys())[0]
+                if time.time() - self.leaders[k] > 2*self.get_timeout_msgs():
+                    #Not the leader anymore
+                    del self.leaders[k]
+                    if len(self.leaders) > 0:
+                        self.leader = sorted(self.leaders.keys())[0]
+                    else:
+                        self.leader = self._id
+                    info('Switchig to next leader {}'.format(self.leader))
+                else:
+                    self.leader = k
+
+            #Im not the leader
+            if self.leader != self._id:
+                continue
             #Got a Proposal from client
             if parsed_message.type == Message.PROPOSAL:
                 debug(parsed_message)
@@ -134,6 +153,13 @@ class Proposer(Entity):
                     self.send(message, 'acceptors')
 
             gevent.sleep(self.get_timeout_msgs())
+    
+    def leader_election(self):
+        while True:
+            message = Message(type = Message.LEADER,
+                                id = self._id)
+            self.send(message, 'proposers')
+            gevent.sleep(self.get_timeout_msgs())
 
 if __name__ == '__main__':
     from args import args
@@ -141,4 +167,5 @@ if __name__ == '__main__':
     gevent.joinall([
         gevent.spawn(proposer.reader_loop),
         gevent.spawn(proposer.check_unresponsive_msgs),
+        gevent.spawn(proposer.leader_election),
     ])
