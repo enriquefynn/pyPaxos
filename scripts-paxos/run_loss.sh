@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 projdir="$1"
 conf=`pwd`/paxos.conf
 n="$2"
