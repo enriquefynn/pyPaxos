@@ -1,11 +1,11 @@
 from logging import getLogger, basicConfig, CRITICAL, DEBUG, INFO
+from args import args
+verbosities = {1: CRITICAL, 2: INFO, 3: DEBUG}
 
-verbosities = {'-v': CRITICAL, '-vv': INFO, '-vvv': DEBUG}
-
-def get_logger(name, argv):
+def get_logger(name):
 	logger = getLogger(name)
 
-	verbosity = min(verbosities.get(arg, CRITICAL+1) for arg in argv or [None])
-	basicConfig(level=verbosity)
-
+	basicConfig(level=verbosities.get(args.v, CRITICAL+1))
 	return logger.critical, logger.info, logger.debug
+
+

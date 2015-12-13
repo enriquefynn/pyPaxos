@@ -9,9 +9,8 @@ from learner import Learner
 
 from logger import get_logger
 from logging import getLogger, CRITICAL, INFO, DEBUG
-from sys import argv
 
-critical, debug, info = get_logger(__name__, argv)
+critical, debug, info = get_logger(__name__)
 
 if __name__ == '__main__':
 	debug('Starting processes')

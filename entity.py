@@ -6,8 +6,7 @@ monkey.patch_socket()
 from message_pb2 import Message
 
 from logger import get_logger
-from sys import argv
-critical, info, debug = get_logger(__name__, argv)
+critical, info, debug = get_logger(__name__)
 
 class Entity(object):
     def __init_socket(self, group):

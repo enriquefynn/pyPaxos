@@ -7,8 +7,7 @@ from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
-from sys import argv
-critical, info, debug = get_logger(__name__, argv)
+critical, info, debug = get_logger(__name__)
 
 class Client(Entity):
     def __init__(self, pid, config_path, values):
@@ -26,11 +25,8 @@ class Client(Entity):
             parsed_message = Message.FromString(msg[0])
         
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('./acceptor.py <id> <config>')
-        sys.exit()
-
-    client = Client(int(sys.argv[1]), sys.argv[2], [line.strip() for line in sys.stdin])
+    from args import args
+    client = Client(args.id, args.config, [line.strip() for line in sys.stdin])
     gevent.joinall([
         gevent.spawn(client.reader_loop),
     ])

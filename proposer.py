@@ -12,8 +12,7 @@ class InstanceState(namedtuple('InstanceState', 'ballot acceptor_messages timest
         return super(InstanceState, cls).__new__(cls, ballot, [], timestamp, phase, msg)   
 
 from logger import get_logger
-from sys import argv
-critical, info, debug = get_logger(__name__, argv)
+critical, info, debug = get_logger(__name__)
 
 
 class Proposer(Entity):
@@ -153,11 +152,8 @@ class Proposer(Entity):
             gevent.sleep(self.get_timeout_msgs())
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('./acceptor.py <id> <config>')
-        sys.exit()
-    proposer = Proposer(int(sys.argv[1]), sys.argv[2])
-
+    from args import args
+    proposer = Proposer(args.id, args.config)
     gevent.joinall([
         gevent.spawn(proposer.reader_loop),
         gevent.spawn(proposer.check_unresponsive_msgs),

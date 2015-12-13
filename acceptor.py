@@ -12,8 +12,7 @@ class InstanceState(namedtuple('InstanceState', 'ballot vballot vmsg')):
         return super(InstanceState, cls).__new__(cls, ballot, vballot, vmsg)
 
 from logger import get_logger
-from sys import argv
-critical, info, debug = get_logger(__name__, argv)
+critical, info, debug = get_logger(__name__)
 
 
 class Acceptor(Entity):
@@ -63,10 +62,8 @@ class Acceptor(Entity):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('./acceptor.py <id> <config>')
-        sys.exit()
-    acceptor = Acceptor(int(sys.argv[1]), sys.argv[2])
+    from args import args
+    acceptor = Acceptor(args.id, args.config)
     gevent.joinall([
             gevent.spawn(acceptor.reader_loop),
         ])

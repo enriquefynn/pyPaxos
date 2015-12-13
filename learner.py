@@ -7,8 +7,7 @@ from message_pb2 import Message
 from entity import Entity
 
 from logger import get_logger
-from sys import argv
-critical, info, debug = get_logger(__name__, argv)
+critical, info, debug = get_logger(__name__)
 
 
 class Learner(Entity):
@@ -71,10 +70,8 @@ class Learner(Entity):
             gevent.sleep(1)
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('./acceptor.py <id> <config>')
-        sys.exit()
-    learner = Learner(int(sys.argv[1]), sys.argv[2])
+    from args import args
+    learner = Learner(args.id, args.config)
     gevent.joinall([
         gevent.spawn(learner.reader_loop),
         ])
