@@ -23,8 +23,8 @@ $projdir/acceptor.sh 3 $conf &
 sleep .5
 echo "starting learners..."
 
-$projdir/learner.sh 1 -vvv $conf > learn1 &
-$projdir/learner.sh 2 -vvv $conf > learn2 &
+$projdir/learner.sh 1 $conf > learn1 &
+$projdir/learner.sh 2 $conf > learn2 &
 
 sleep .5
 echo "starting proposers..."
@@ -36,9 +36,11 @@ echo "waiting to start clients"
 sleep .5
 echo "starting clients..."
 
-$projdir/client.sh 1 -vvv $conf < prop1 &
-$projdir/client.sh 2 -vvv $conf < prop2 &
+$projdir/client.sh 1 $conf < prop1 &
+$projdir/client.sh 2 $conf < prop2 &
 
 sleep 5
+
+./check_all.sh
 
 wait

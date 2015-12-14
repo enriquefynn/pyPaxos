@@ -11,4 +11,8 @@ if [[ $PROP_LEARNED == $PROP ]]; then
 else
 	echo "$TEST"
     echo "  > Failed!"
+    echo "Propositions"
+    cat prop.sorted | sort -u
+    echo "Learned"
+    cat $@ | sort -u
 fi

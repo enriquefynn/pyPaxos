@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
 projdir="$1"
 conf=`pwd`/paxos.conf
 n="$2"
@@ -8,50 +9,44 @@ if [[ x$projdir == "x" || x$n == "x" ]]; then
     exit 1
 fi
 
-# following line kills processes that have the config file in its cmdline
-KILLCMD="pkill -f $conf"
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM exit
 
-$KILLCMD
-
-cd $projdir
-
-../generate.sh $n > ../prop1
-../generate.sh $n > ../prop2
+./generate.sh $n > prop1
+./generate.sh $n > prop2
 
 echo "starting acceptors..."
 
-./acceptor.sh 1 $conf &
-./acceptor.sh 2 $conf &
-./acceptor.sh 3 $conf &
+$projdir/acceptor.sh 1 $conf &
+$projdir/acceptor.sh 2 $conf &
+$projdir/acceptor.sh 3 $conf &
 
-sleep 1
+sleep .5
 echo "starting learner 1..."
 
-./learner.sh -vvv 1 $conf > ../learn1 &
+$projdir/learner.sh 1 $conf > learn1 &
 
-sleep 1
+sleep .5
 echo "starting proposers..."
 
-./proposer.sh 1 $conf &
-./proposer.sh 2 $conf &
+$projdir/proposer.sh 1 $conf &
+$projdir/proposer.sh 2 $conf &
 
-echo "waiting to start clients"
-sleep 1
+sleep .5
 echo "starting client 1..."
 
-./client.sh 1 $conf < ../prop1 &
+$projdir/client.sh 1 $conf < prop1 &
 
-sleep 1
-echo "starting learners 2..."
-./learner.sh -vvv 2 $conf > ../learn2 &
+sleep .5
+echo "starting learner 2..."
+$projdir/learner.sh 2 $conf > learn2 &
 
-sleep 1
+sleep .5
 echo "starting client 2..."
-./client.sh 2 $conf < ../prop2 &
+
+$projdir/client.sh 2 $conf < prop2 &
 
 sleep 5
 
-$KILLCMD
-wait
+./check_all.sh
 
-cd ..
+wait
