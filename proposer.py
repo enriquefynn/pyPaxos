@@ -139,7 +139,7 @@ class Proposer(Entity):
                     debug('Found unresponsive messages, will try again')
 
                     #Grow ballot by arbitrary number
-                    print self.state[instance]
+                    debug(self.state[instance])
                     self.state[instance] = self.state[instance]._replace(ballot = self.state[instance].ballot + 100, timestamp = time.time(), phase = Message.PHASE1A)
 
                     #Build Phase1A
