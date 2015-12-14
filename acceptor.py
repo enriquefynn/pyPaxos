@@ -41,7 +41,6 @@ class Acceptor(Entity):
                 debug('Received decide')
                 debug(msg)
                 debug(self.state[msg.instance])
-                debug('EAAAA1 %s %s %s', msg.ballot, self.state[msg.instance])
                 if (msg.ballot >= self.state[msg.instance].ballot and
                     msg.ballot != self.state[msg.instance].vballot):
                     self.state[msg.instance] = InstanceState(msg.ballot, 
@@ -53,8 +52,6 @@ class Acceptor(Entity):
                                       id = self._id,
                                       msg = msg.msg)
                     self.send(message, 'proposers')
-                debug('EAAAA2 %s %s %s', msg.ballot, self.state[msg.instance])
-
 
 if __name__ == '__main__':
     from args import args
