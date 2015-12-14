@@ -36,6 +36,9 @@ class Proposer(Entity):
             parsed_message = Message.FromString(msg[0])
             #See if it's time to change the leader
             if parsed_message.type == Message.LEADER:
+                #See if we are in sync with instances
+                if parsed_message.instance > self.instance:
+                    self.instance = parsed_message.instance
                 self.leaders[parsed_message.id] = time.time()
                 k = sorted(self.leaders.keys())[0]
                 if time.time() - self.leaders[k] > 2*self.get_timeout_msgs():
@@ -157,7 +160,8 @@ class Proposer(Entity):
     def leader_election(self):
         while True:
             message = Message(type = Message.LEADER,
-                                id = self._id)
+                                id = self._id,
+                                instance = self.instance)
             self.send(message, 'proposers')
             gevent.sleep(self.get_timeout_msgs())
 
