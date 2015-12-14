@@ -39,9 +39,9 @@ class Learner(Entity):
                     self.decided[self.last_received_instance] = self.non_printed_instances[self.last_received_instance]
                 if self.last_received_instance < self.maximum_instance:
                     message = Message(instance = self.last_received_instance+1,
-                                                  id = self._id,
-                                                  msg = '',
-                                                  type = Message.PROPOSAL)
+                                      id = self._id,
+                                      msg = '',
+                                      type = Message.PROPOSAL)
                     debug('Catching up with message {}'.format(self.last_received_instance+1))
                     self.send(message, 'proposers')
 
