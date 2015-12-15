@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-import gevent, socket, struct
+import gevent, socket, struct, time
 from gevent import select
 import sys
 
@@ -17,8 +17,15 @@ class Learner(Entity):
         self.maximum_instance = -1
         self.non_printed_instances = {}
         self.decided  = {}
+        self.msgs_to_send = {}
 
     def reader_loop(self):
+        msg = Message(id = self._id,
+                     instance = -1,
+                     msg = '{} {}'.format(time.time(), '0'*100),
+                     type = Message.PROPOSAL)
+        self.send(msg, 'proposers')
+
         while True:
             msg = self.recv()
             parsed_message = Message.FromString(msg[0])
@@ -34,7 +41,7 @@ class Learner(Entity):
                 while (self.last_received_instance + 1) in self.non_printed_instances:
                     self.last_received_instance+=1
                     if parsed_message.msg != '':
-                        sys.stdout.write("%s\n" % self.non_printed_instances[self.last_received_instance])
+                        sys.stdout.write("{} {}\n".format(time.time(), self.non_printed_instances[self.last_received_instance]))
                         sys.stdout.flush()
                     self.decided[self.last_received_instance] = self.non_printed_instances[self.last_received_instance]
                 if self.last_received_instance < self.maximum_instance:
@@ -44,6 +51,13 @@ class Learner(Entity):
                                       type = Message.PROPOSAL)
                     debug('Catching up with message {}'.format(self.last_received_instance+1))
                     self.send(message, 'proposers')
+
+                msg = Message(id = self._id,
+                     instance = -1,
+                     msg = '{} {}'.format(time.time(), '0'*100),
+                     type = Message.PROPOSAL)
+                self.send(msg, 'proposers')
+
 
     def check_loop(self, values, callback):
         while True:
