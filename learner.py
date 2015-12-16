@@ -47,16 +47,17 @@ class Learner(Entity):
                 if self.last_received_instance < self.maximum_instance:
                     message = Message(instance = self.last_received_instance+1,
                                       id = self._id,
-                                      msg = '{} {}'.format(int(round(time.time() * 1000)), '0'*100),
+                                      msg = '',
                                       type = Message.PROPOSAL)
                     debug('Catching up with message {}'.format(self.last_received_instance+1))
                     self.send(message, 'proposers')
 
-                msg = Message(id = self._id,
-                     instance = -1,
-                     msg = '{} {}'.format(time.time(), '0'*100),
-                     type = Message.PROPOSAL)
-                self.send(msg, 'proposers')
+                else:
+                    msg = Message(id = self._id,
+                         instance = -1,
+                         msg = '{} {}'.format(int(round(time.time() * 1000)), '0'*100),
+                         type = Message.PROPOSAL)
+                    self.send(msg, 'proposers')
 
 
     def check_loop(self, values, callback):
