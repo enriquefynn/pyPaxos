@@ -143,7 +143,7 @@ class Proposer(Entity):
         while True:
             for instance in self.state:
                 if (self.state[instance].phase != Message.DECISION and
-                time.time() - self.state[instance].timestamp > self.get_timeout_msgs()):
+                abs(time.time() - self.state[instance].timestamp) > self.get_timeout_msgs()):
                     debug('Found unresponsive messages, will try again')
 
                     #Grow ballot by arbitrary number
@@ -168,7 +168,7 @@ class Proposer(Entity):
                                 id = self._id,
                                 instance = self.instance)
             self.send(message, 'proposers')
-            gevent.sleep(self.get_timeout_msgs())
+            gevent.sleep(self.get_leader_timeout())
 
 if __name__ == '__main__':
     from args import args

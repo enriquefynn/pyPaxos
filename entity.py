@@ -52,3 +52,6 @@ class Entity(object):
     def get_timeout_msgs(self):
         return float(self.__config['timeout_msgs'][0])
 
+    def get_leader_timeout(self):
+        return float(self.__config['leader_timeout'][0])
+
