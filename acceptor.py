@@ -40,6 +40,8 @@ class Acceptor(Entity):
             elif msg.type == Message.PHASE2A:
                 debug('Received decide')
                 debug(msg)
+                if not msg.instance  in self.state:
+                    continue
                 debug(self.state[msg.instance])
                 if (msg.ballot >= self.state[msg.instance].ballot and
                     msg.ballot != self.state[msg.instance].vballot):
