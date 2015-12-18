@@ -10,23 +10,26 @@ from logger import get_logger
 critical, info, debug = get_logger(__name__)
 
 class Client(Entity):
-    def __init__(self, pid, config_path, values):
+    def __init__(self, pid, config_path):
         super(Client, self).__init__(pid, 'clients', config_path)
-        for value in values:
-            msg = Message(id = self._id,
-                                      instance = -1,
-                                      msg = value,
-                                      type = Message.PROPOSAL)
-            self.send(msg, 'proposers')
 
-    def reader_loop(self):
+    def read_input(self):
         while True:
-            msg = self.recv()
-            parsed_message = Message.FromString(msg[0])
+            try:
+                select.select([sys.stdin], [], [])
+                msg_text = raw_input()
+                msg = Message(instance = -1,
+                              id = self._id,
+                              msg = msg_text,
+                              type = Message.PROPOSAL)
+
+                self.send(msg, 'proposers')
+            except EOFError, KeyboardInterrupt:
+                exit(0)
         
 if __name__ == '__main__':
     from args import args
-    client = Client(args.id, args.config, [line.strip() for line in sys.stdin])
+    client = Client(args.id, args.config)
     gevent.joinall([
-        gevent.spawn(client.reader_loop),
+        gevent.spawn(client.read_input)
     ])
